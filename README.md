@@ -1,6 +1,6 @@
-# Samaj Setu — Societal Innovation Portal
+# SIP — Societal Innovation Portal
 
-Samaj Setu connects community-reported challenges with university teams whose areas of work may fit. Citizens can describe a challenge, review a five-step analysis, see a suggested first approach and college match, then choose whether to submit the challenge. University accounts can review assigned reports and post progress updates.
+SIP (Societal Innovation Portal) connects community-reported challenges with university teams whose areas of work may fit. Citizens can describe a challenge, review a five-step analysis, see a suggested first approach and college match, then choose whether to submit the challenge. University accounts can review assigned reports and post progress updates.
 
 The project brief and team presentation are in [`docs/SIH 1.pptx`](docs/SIH%201.pptx).
 
