@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f5f2eb"><title>{{ university }} · SIP Workspace</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}"></head>
+<body><div class="dashboard-page">
+<header class="dashboard-header"><a class="dash-brand" href="{{ url_for('home') }}"><span class="dashboard-mark">S</span><span><strong>SIP</strong><small>Societal Innovation Portal</small></span></a><div class="dashboard-user"><div class="user-avatar">{{ university[:1] }}</div><div><div class="user-label">UNIVERSITY WORKSPACE</div><div class="user-name">{{ university }}</div></div><a href="{{ url_for('university_logout') }}" class="logout-link">Sign out ↗</a></div></header>
+<main class="dashboard-main">
+    <section class="dashboard-hero"><div class="hero-pattern"></div><div class="hero-content"><div class="hero-kicker"><span></span> YOUR INSTITUTION’S COMMUNITY REGISTER</div><h1>Good work<br>starts <em>with listening.</em></h1><p>Review challenges from your community and share progress as your team takes action.</p><div class="hero-meta"><span>✳ &nbsp;{{ university }}</span><span>·</span><span>Signed in as {{ username }}</span></div></div><div class="hero-stamp"><span>LOCAL<br>IDEAS</span><b>✳</b><span>SHARED<br>PROGRESS</span></div></section>
+    <section class="stats-grid" aria-label="Report summary"><article class="stat-card stat-total"><div><span class="stat-label">ALL CHALLENGES</span><strong id="totalReports">0</strong></div><span class="stat-glyph">◌</span><small>Routed to your institution</small></article><article class="stat-card"><div><span class="stat-label">NEEDS A FIRST LOOK</span><strong id="pendingReports">0</strong></div><span class="stat-glyph glyph-orange">↗</span><small>Waiting for your team</small></article><article class="stat-card"><div><span class="stat-label">IN MOTION</span><strong id="progressReports">0</strong></div><span class="stat-glyph glyph-green">⌁</span><small>Currently being worked on</small></article><article class="stat-card"><div><span class="stat-label">RESOLVED</span><strong id="resolvedReports">0</strong></div><span class="stat-glyph glyph-blue">✳</span><small>Progress made together</small></article></section>
+    <section class="reports-section"><div class="section-heading"><div><span class="section-label">COMMUNITY CHALLENGES</span><h2>The register</h2><p>Every report is an opportunity to make a local difference.</p></div><button class="refresh-button" id="refreshButton" onclick="loadReports()"><span>↻</span> Refresh</button></div><div class="report-toolbar"><div class="search-box"><span>⌕</span><input id="reportSearch" type="search" placeholder="Search challenges or register number…" aria-label="Search challenges"></div><div class="filter-tabs" role="group" aria-label="Filter by status"><button class="filter-tab active" data-filter="All">All <span id="allCount">0</span></button><button class="filter-tab" data-filter="Pending">Pending</button><button class="filter-tab" data-filter="In Progress">In progress</button><button class="filter-tab" data-filter="Resolved">Resolved</button></div></div><div class="report-table-wrapper"><table class="report-table"><thead><tr><th>REGISTER</th><th>CHALLENGE</th><th>AREA</th><th>PRIORITY</th><th>STATUS</th><th>PROGRESS</th><th></th></tr></thead><tbody id="reportTableBody"><tr><td colspan="7" class="empty-state">Gathering the latest community challenges…</td></tr></tbody></table></div><div class="register-footer"><span><i></i> PRIVATE UNIVERSITY WORKSPACE</span><span id="lastUpdated">UPDATING REGISTER</span></div></section>
+</main></div>
+<div id="reportModal" class="modal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-card"><div class="modal-header"><div><span class="section-label">CHALLENGE DETAIL</span><h2 id="modalTitle">Community challenge</h2><div class="modal-register">REGISTER <strong id="modalRegister">—</strong></div></div><button class="modal-close" onclick="closeModal()" aria-label="Close dialog">×</button></div><div class="modal-content"><div class="modal-facts"><div class="detail-row"><span>Challenge area</span><strong id="modalCategory">—</strong></div><div class="detail-row"><span>Priority</span><strong id="modalPriority">—</strong></div><div class="detail-row"><span>Assigned team</span><strong id="modalTeam">—</strong></div><div class="detail-row"><span>Expertise</span><strong id="modalExpertise">—</strong></div></div><div class="problem-box"><span>WHAT THE COMMUNITY SHARED</span><p id="modalProblem">—</p></div><div class="update-section"><div><span class="section-label">KEEP THE WORK VISIBLE</span><h3>Update this challenge</h3></div><div class="update-grid"><div><label for="statusSelect">Status</label><select id="statusSelect"><option value="Pending">Pending</option><option value="In Progress">In Progress</option><option value="Resolved">Resolved</option></select></div><div><label for="progressInput">Progress <span id="progressValue">0%</span></label><input id="progressInput" type="range" min="0" max="100" value="0"></div></div><label for="solutionInput">Progress note or next step</label><textarea id="solutionInput" rows="4" placeholder="Share what your team has done, or what happens next…"></textarea><div id="saveMessage" class="save-message" role="status" hidden></div><button class="save-button" id="saveButton" onclick="saveUpdate()">Save challenge update <span>↗</span></button></div></div></div></div>
+<script>
+const university = {{ university|tojson }};
+let reports = [];
+let currentRegisterNumber = null;
+let currentFilter = 'All';
+
+async function loadReports() {
+    const body = document.getElementById('reportTableBody');
+    const refresh = document.getElementById('refreshButton');
+    body.innerHTML = '<tr><td colspan="7" class="empty-state">Gathering the latest community challenges…</td></tr>';
+    refresh.disabled = true;
+    try {
+        const response = await fetch(`/api/university/${encodeURIComponent(university)}`);
+        const data = await response.json();
+        if (!response.ok || !data.success) throw new Error(data.error || 'Unable to load reports.');
+        reports = data.reports || [];
+        updateStatistics();
+        renderReports();
+        document.getElementById('lastUpdated').textContent = `UPDATED ${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}`;
+    } catch (error) {
+        body.innerHTML = `<tr><td colspan="7" class="empty-state error-state">${escapeHtml(error.message)} <button class="retry-link" onclick="loadReports()">Try again</button></td></tr>`;
+    } finally { refresh.disabled = false; }
+}
+
+function updateStatistics() {
+    document.getElementById('totalReports').textContent = reports.length;
+    document.getElementById('pendingReports').textContent = reports.filter(r => r.status === 'Pending').length;
+    document.getElementById('progressReports').textContent = reports.filter(r => r.status === 'In Progress').length;
+    document.getElementById('resolvedReports').textContent = reports.filter(r => r.status === 'Resolved').length;
+    document.getElementById('allCount').textContent = reports.length;
+}
+
+function renderReports() {
+    const body = document.getElementById('reportTableBody');
+    const query = document.getElementById('reportSearch').value.trim().toLowerCase();
+    const filtered = reports.filter(r => (currentFilter === 'All' || r.status === currentFilter) && (!query || [r.problem, r.register_number, r.category, r.team].some(v => String(v || '').toLowerCase().includes(query))));
+    if (!filtered.length) {
+        const message = reports.length ? 'No challenges match this view. Try another filter or search.' : 'No challenges have been routed to your institution yet. When one arrives, it will appear here.';
+        body.innerHTML = `<tr><td colspan="7" class="empty-state"><span class="empty-spark">✳</span>${message}</td></tr>`;
+        return;
+    }
+    body.innerHTML = filtered.map(r => `<tr><td class="register-number">${escapeHtml(r.register_number)}</td><td class="problem-cell"><strong>${escapeHtml(r.problem)}</strong><small>Received ${formatDate(r.created_at)}</small></td><td><span class="category-tag">${escapeHtml(r.category || 'General')}</span></td><td><span class="priority-badge priority-${escapeHtml((r.priority || 'medium').toLowerCase())}"><i></i>${escapeHtml(r.priority || 'Medium')}</span></td><td><span class="status-badge status-${escapeHtml((r.status || 'pending').toLowerCase().replaceAll(' ', '-'))}">${escapeHtml(r.status || 'Pending')}</span></td><td><div class="progress-cell"><div class="progress-track"><i style="width:${Math.max(0,Math.min(100,Number(r.progress)||0))}%"></i></div><span>${Math.max(0,Math.min(100,Number(r.progress)||0))}%</span></div></td><td><button class="view-button" onclick="viewReport('${escapeJs(r.register_number)}')">Open <span>↗</span></button></td></tr>`).join('');
+}
+
+function viewReport(number) {
+    const report = reports.find(item => item.register_number === number);
+    if (!report) return;
+    currentRegisterNumber = number;
+    document.getElementById('modalTitle').textContent = (report.problem || 'Community challenge').slice(0, 72) + ((report.problem || '').length > 72 ? '…' : '');
+    document.getElementById('modalRegister').textContent = report.register_number || '—';
+    document.getElementById('modalCategory').textContent = report.category || '—';
+    document.getElementById('modalPriority').textContent = report.priority || '—';
+    document.getElementById('modalTeam').textContent = report.team || '—';
+    document.getElementById('modalExpertise').textContent = report.expertise || '—';
+    document.getElementById('modalProblem').textContent = report.problem || '—';
+    document.getElementById('statusSelect').value = report.status || 'Pending';
+    document.getElementById('progressInput').value = report.progress || 0;
+    document.getElementById('progressValue').textContent = `${report.progress || 0}%`;
+    document.getElementById('solutionInput').value = report.solution || '';
+    document.getElementById('saveMessage').hidden = true;
+    document.getElementById('reportModal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeModal() { document.getElementById('reportModal').style.display = 'none'; document.body.style.overflow = ''; currentRegisterNumber = null; }
+
+async function saveUpdate() {
+    if (!currentRegisterNumber) return;
+    const button = document.getElementById('saveButton');
+    const note = document.getElementById('saveMessage');
+    button.disabled = true;
+    button.innerHTML = 'Saving update…';
+    try {
+        const response = await fetch(`/api/problem/${encodeURIComponent(currentRegisterNumber)}/update`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({status:document.getElementById('statusSelect').value, progress:Number(document.getElementById('progressInput').value), solution:document.getElementById('solutionInput').value})});
+        const data = await response.json();
+        if (!response.ok || !data.success) throw new Error(data.error || 'Unable to save update.');
+        note.textContent = 'Update saved. Your community register is up to date.';
+        note.className = 'save-message success';
+        note.hidden = false;
+        await loadReports();
+    } catch (error) { note.textContent = error.message || 'Unable to connect to the server.'; note.className = 'save-message failure'; note.hidden = false; }
+    finally { button.disabled = false; button.innerHTML = 'Save challenge update <span>↗</span>'; }
+}
+
+function escapeHtml(value) { return String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;'); }
+function escapeJs(value) { return String(value ?? '').replaceAll('\\','\\\\').replaceAll("'","\\'").replaceAll('\n','\\n').replaceAll('\r','\\r'); }
+function formatDate(value) { if (!value) return 'recently'; const date = new Date(value.replace(' ', 'T')); return Number.isNaN(date.getTime()) ? 'recently' : date.toLocaleDateString([], {day:'numeric',month:'short',year:'numeric'}); }
+
+document.getElementById('reportSearch').addEventListener('input', renderReports);
+document.querySelectorAll('.filter-tab').forEach(button => button.addEventListener('click', () => {currentFilter = button.dataset.filter; document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.toggle('active', tab === button)); renderReports();}));
+document.getElementById('progressInput').addEventListener('input', event => {document.getElementById('progressValue').textContent = `${event.target.value}%`; if (Number(event.target.value) === 100) document.getElementById('statusSelect').value = 'Resolved';});
+document.getElementById('statusSelect').addEventListener('change', event => {if (event.target.value === 'Resolved') {document.getElementById('progressInput').value = 100; document.getElementById('progressValue').textContent = '100%';}});
+document.getElementById('reportModal').addEventListener('click', event => {if (event.target.id === 'reportModal') closeModal();});
+document.addEventListener('keydown', event => {if (event.key === 'Escape') closeModal();});
+loadReports();
+</script></body></html>

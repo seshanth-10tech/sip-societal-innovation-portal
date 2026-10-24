@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}SIP — Better ideas, closer to home{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='portal.css') }}">{% endblock %}
+{% block content %}
+<div class="landing">
+    <div class="topline"><span>JHARKHAND · INDIA</span><span>PUBLIC INNOVATION NETWORK <i></i> OPEN</span></div>
+    <header class="landing-nav">
+        <a class="wordmark" href="{{ url_for('home') }}"><span class="mark"><b></b><b></b><b></b><b></b></span><span>SIP<small>Societal Innovation Portal</small></span></a>
+        <nav aria-label="Main navigation"><a href="#how">How it works</a><a href="#network">Our network</a><a class="nav-login" href="{{ url_for('university_login') }}">University sign in <span>↗</span></a></nav>
+    </header>
+    <main>
+        <section class="landing-hero">
+            <div class="hero-copy"><div class="eyebrow"><span class="eyebrow-line"></span>LOCAL CHALLENGES. SHARED PROGRESS.</div>
+                <h1>Good ideas<br>start <em>right here.</em></h1>
+                <p class="hero-lede">A bridge between the people who know a problem best and the institutions who can help solve it.</p>
+                <div class="hero-actions"><a class="button button-dark" href="{{ url_for('citizen') }}">Bring forward a challenge <span>↗</span></a><a href="#how" class="text-link">See how it works <span>↓</span></a></div>
+                <div class="hero-proof"><div class="avatar-stack"><span>J</span><span>U</span><span>✳</span></div><p><strong>Rooted in Jharkhand.</strong><br>Built for the people who live here.</p></div>
+            </div>
+            <div class="hero-art" aria-label="Illustration of people and ideas coming together">
+                <div class="art-orbit orbit-one"></div><div class="art-orbit orbit-two"></div>
+                <div class="art-sun"></div><div class="art-hill hill-back"></div><div class="art-hill hill-front"></div>
+                <div class="art-path"></div><div class="art-stem stem-one"><i></i><b></b></div><div class="art-stem stem-two"><i></i><b></b></div>
+                <div class="art-person person-one"><i></i><b></b><span></span></div><div class="art-person person-two"><i></i><b></b><span></span></div>
+                <div class="art-tag tag-community"><span>01</span> COMMUNITY</div><div class="art-tag tag-ideas"><span>02</span> IDEAS IN MOTION</div>
+                <div class="art-coordinate">23° 21′ N<br>85° 20′ E</div><div class="art-caption">A better future is a<br>neighbourhood effort.</div>
+            </div>
+        </section>
+        <section class="signal-row" id="network"><div><span class="signal-icon">✳</span><p><strong>Citizens</strong><br>Bring lived experience</p></div><span class="signal-arrow">→</span><div><span class="signal-icon signal-orange">⌘</span><p><strong>Universities</strong><br>Bring local expertise</p></div><span class="signal-arrow">→</span><div><span class="signal-icon signal-blue">↗</span><p><strong>Communities</strong><br>See ideas become action</p></div><div class="signal-note">ONE CONNECTED<br>INNOVATION NETWORK</div></section>
+        <section class="how-section" id="how"><div class="section-intro"><span class="eyebrow">FROM FIRST-HAND TO FORWARD MOTION</span><h2>Small steps.<br><em>Real momentum.</em></h2></div><div class="steps"><article><span>01 / SHARE</span><h3>Start with what you see.</h3><p>Describe a challenge in your own words. Every useful change begins with someone paying attention.</p></article><article><span>02 / CONNECT</span><h3>Find the right minds.</h3><p>Your challenge is matched with a university team whose knowledge fits the work ahead.</p></article><article><span>03 / FOLLOW THROUGH</span><h3>Keep the progress visible.</h3><p>Track the response as a local team takes the challenge from first look to next steps.</p></article></div></section>
+    </main>
+<div id="college-name" class="mt-4 text-center" style="display:none; font-weight:bold; font-size:1.2rem;"></div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            var el = document.getElementById('college-name');
+            if (el) {
+                el.textContent = 'NIT Jamshedpur';
+                el.style.display = 'block';
+            }
+        }, 5000);
+    });
+</script>
+<footer class="landing-footer"><a class="wordmark" href="{{ url_for('home') }}"><span class="mark"><b></b><b></b><b></b><b></b></span><span>SIP<small>Societal Innovation Portal</small></span></a><span>IDEAS THAT TAKE ROOT.</span><span>© {{ current_year }} SIP · JHARKHAND</span></footer>
+</div>
+{% endblock %}
